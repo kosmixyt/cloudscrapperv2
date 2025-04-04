@@ -27,6 +27,7 @@ async def get_db():
     finally:
         await db.close()
 
+
 @router.post("/users/", response_model=schemas.User)
 async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_db)):
     # Check if user already exists

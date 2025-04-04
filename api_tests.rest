@@ -58,5 +58,6 @@ POST {{baseUrl}}/v1
 Content-Type: application/json
 
 {
-  "cmd": "sessions.create"
+  "cmd": "request.get",
+  "url" : "https://ygg.re/"
 }
