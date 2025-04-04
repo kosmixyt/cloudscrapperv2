@@ -1,0 +1,8 @@
+{
+  "name": "fastapi-starter",
+  "private": true,
+  "scripts": {
+    "start": "python main.py",
+    "test": "pytest"
+  }
+}
