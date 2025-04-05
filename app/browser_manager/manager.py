@@ -84,28 +84,7 @@ async def NewDriver():
         
         # Set up CDP handler for response events
         def response_handler(response):
-            try:
-                # Save the entire response object to JSON
-                timestamp = datetime.datetime.now().isoformat()
-                
-                # Add more detailed logging for document type responses
-                is_document = False
-                if response.get('params', {}).get('type') == 'Document':
-                    print(f"Document request captured: {response.get('params', {}).get('response', {}).get('url', 'unknown')}")
-                    is_document = True
-                
-                # Add timestamp to the response data
-                response_data = {
-                    "timestamp": timestamp,
-                    "response": response,
-                    "is_document": is_document,
-                    "from_cache": False
-                }
-                write_to_json(response_data)
-            except Exception as e:
-                print(f"Error in response handler: {e}")
-                traceback.print_exc()
-        
+            print(response)
 
         # Add the handler for network responses
         try:
