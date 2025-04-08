@@ -1,0 +1,98 @@
+### Variables
+@baseUrl = http://localhost:8000
+
+### Create a new user
+POST {{baseUrl}}/users/
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "full_name": "Test User",
+  "password": "password123"
+}
+
+### Login
+# This request captures the access_token from the response
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+### Logout
+POST {{baseUrl}}/logout
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Access protected route
+GET {{baseUrl}}/protected
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Get all users (protected route)
+GET {{baseUrl}}/users/
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Create a new allowed host
+POST {{baseUrl}}/allowed-hosts/
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.access_token}}
+
+{
+  "origin": "127.0.0.1"
+}
+
+### Get all allowed hosts for current user
+GET {{baseUrl}}/allowed-hosts/
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Delete an allowed host (replace {id} with an actual ID)
+DELETE {{baseUrl}}/allowed-hosts/1
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Get all user requests
+GET {{baseUrl}}/requests/
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Get user requests with pagination and filtering
+GET {{baseUrl}}/requests/?page=1&limit=10&url=example.com
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Get all chrome sessions for current user
+GET {{baseUrl}}/chrome-sessions/
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Flaresolver API
+POST {{baseUrl}}/v1
+Content-Type: application/json
+
+{
+  "cmd": "request.get",
+  "url" : "https://kosmix.fr"
+}
+
+### Flaresolver API (Background processing)
+POST {{baseUrl}}/v1
+Content-Type: application/json
+
+{
+  "cmd": "request.get",
+  "url" : "https://kosmix.fr"
+}
+
+### Check task status (replace with actual task_id from response)
+@taskId = e50aa28d-392a-4e07-9a01-078e9efaf597
+GET {{baseUrl}}/v1/tasks/{{taskId}}
+
+### Check task status (without waiting)
+GET {{baseUrl}}/v1/tasks/{{taskId}}
+
+### Check task status (with waiting - polls until complete or timeout)
+GET {{baseUrl}}/v1/tasks/{{taskId}}?wait=true&timeout=60
+
+### Get screenshot for a request (replace with actual request_id)
+GET {{baseUrl}}/screenshots/20
+Authorization: Bearer {{login.response.body.access_token}}

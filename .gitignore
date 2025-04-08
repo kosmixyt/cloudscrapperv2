@@ -1,0 +1,23 @@
+node_modules
+
+# Ignore Python cache files and directories
+__pycache__/
+screenshot/
+
+# Ignore database files
+*.db
+
+# Ignore lock files
+*.lock
+
+# Ignore compiled Python files
+*.pyc
+
+# Ignore environment files
+.env
+
+# Ignore output files
+out.json
+
+.gitkeep
+alembic/

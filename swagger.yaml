@@ -1,0 +1,748 @@
+openapi: 3.0.0
+info:
+  title: CloudScrapper API
+  description: >
+    An API for browser automation and web scraping with Cloudflare bypass capabilities.
+    This service provides endpoints to manage browser sessions, users, and perform web requests.
+  version: 1.0.0
+  contact:
+    name: API Support
+servers:
+  - url: http://localhost:8000
+    description: Development server
+tags:
+  - name: Authentication
+    description: User registration and authentication endpoints
+  - name: Browser Sessions
+    description: Endpoints for managing browser sessions
+  - name: Allowed Hosts
+    description: Manage allowed origins for API access
+  - name: Requests
+    description: Web requests and their results
+  - name: Screenshots
+    description: Access screenshots of web requests
+
+paths:
+  /users/:
+    post:
+      tags:
+        - Authentication
+      summary: Create new user
+      description: Register a new user account
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '200':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Email already registered
+        '403':
+          description: Registration is disabled
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate a user and receive an access token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginData'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Incorrect email or password
+
+  /logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Log out the current user
+      operationId: logoutUser
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully logged out"
+
+  /protected:
+    get:
+      tags:
+        - Authentication
+      summary: Protected route
+      description: Test endpoint requiring authentication
+      operationId: protectedRoute
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  /v1:
+    post:
+      tags:
+        - Browser Sessions
+      summary: Flaresolver API
+      description: Main API endpoint for browser automation and Cloudflare bypass
+      operationId: flaresolverRoute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/SessionCreateRequest'
+                - $ref: '#/components/schemas/SessionDestroyRequest'
+                - $ref: '#/components/schemas/SessionListRequest'
+                - $ref: '#/components/schemas/RequestGetRequest'
+      responses:
+        '200':
+          description: Request processed successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SessionCreateResponse' 
+                  - $ref: '#/components/schemas/SessionDestroyResponse'
+                  - $ref: '#/components/schemas/SessionListResponse'
+                  - $ref: '#/components/schemas/RequestGetResponse'
+                  - $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Bad request or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/tasks/{task_id}:
+    get:
+      tags:
+        - Browser Sessions
+      summary: Check task status
+      description: Check the status of a background task
+      operationId: getTaskStatus
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the task to check
+        - name: wait
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Whether to wait for task completion
+        - name: timeout
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+          description: Maximum time to wait in seconds
+        - name: polling_interval
+          in: query
+          required: false
+          schema:
+            type: number
+            format: float
+            default: 0.5
+          description: Interval between status checks in seconds
+      responses:
+        '200':
+          description: Task status information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /allowed-hosts/:
+    post:
+      tags:
+        - Allowed Hosts
+      summary: Create allowed host
+      description: Add a new IP address to the allowed origins list
+      operationId: createAllowedHost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllowedOriginCreate'
+      responses:
+        '200':
+          description: Host added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllowedOrigin'
+        '400':
+          description: Origin already registered
+        '401':
+          description: Unauthorized
+    get:
+      tags:
+        - Allowed Hosts
+      summary: Get all allowed hosts
+      description: Get all allowed origins for the current user
+      operationId: getAllowedHosts
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of allowed hosts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AllowedOrigin'
+        '401':
+          description: Unauthorized
+
+  /allowed-hosts/{origin_id}:
+    delete:
+      tags:
+        - Allowed Hosts
+      summary: Delete allowed host
+      description: Remove an IP address from the allowed origins list
+      operationId: deleteAllowedHost
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: origin_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the allowed origin to delete
+      responses:
+        '200':
+          description: Host deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Origin deleted successfully"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Not authorized to delete this origin
+        '404':
+          description: Allowed host not found
+
+  /requests/:
+    get:
+      tags:
+        - Requests
+      summary: Get all requests
+      description: Get all web requests made by the current user
+      operationId: getUserRequests
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of user requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Request'
+        '401':
+          description: Unauthorized
+
+  /screenshots/{request_id}:
+    get:
+      tags:
+        - Screenshots
+      summary: Get request screenshot
+      description: Get the screenshot image for a specific request
+      operationId: getRequestScreenshot
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the request
+      responses:
+        '200':
+          description: Screenshot image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '403':
+          description: Not authorized to view this screenshot
+        '404':
+          description: Screenshot not found
+
+  /chrome-sessions/:
+    get:
+      tags:
+        - Browser Sessions
+      summary: Get all chrome sessions
+      description: Get all browser sessions for the current user
+      operationId: getUserChromeSessions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of chrome sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChromeSession'
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserBase:
+      type: object
+      required:
+        - email
+        - full_name
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        full_name:
+          type: string
+          example: "John Doe"
+
+    UserCreate:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+        - type: object
+          required:
+            - password
+          properties:
+            password:
+              type: string
+              format: password
+              example: "password123"
+
+    User:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    Token:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          example: "bearer"
+
+    LoginData:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    AllowedOriginBase:
+      type: object
+      required:
+        - origin
+      properties:
+        origin:
+          type: string
+          example: "127.0.0.1"
+
+    AllowedOriginCreate:
+      $ref: '#/components/schemas/AllowedOriginBase'
+
+    AllowedOrigin:
+      allOf:
+        - $ref: '#/components/schemas/AllowedOriginBase'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+              nullable: true
+            owner_id:
+              type: integer
+              example: 1
+            disabled:
+              type: boolean
+              default: false
+
+    RequestBase:
+      type: object
+      properties:
+        method:
+          type: string
+          example: "GET"
+        url:
+          type: string
+          example: "https://example.com"
+        status_code:
+          type: integer
+          example: 200
+
+    Request:
+      allOf:
+        - $ref: '#/components/schemas/RequestBase'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            string_response:
+              type: string
+              nullable: true
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+              nullable: true
+            request_origin_id:
+              type: integer
+              nullable: true
+            chrome_session_id:
+              type: integer
+              nullable: true
+            user_id:
+              type: integer
+              example: 1
+
+    ChromeSessionBase:
+      type: object
+      required:
+        - session_id
+      properties:
+        session_id:
+          type: string
+          example: "a1b2c3d4e5f6"
+        proxy:
+          type: string
+          nullable: true
+          example: "proxy://1.2.3.4:8080"
+
+    ChromeSession:
+      allOf:
+        - $ref: '#/components/schemas/ChromeSessionBase'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+              nullable: true
+            user_id:
+              type: integer
+              example: 1
+
+    BrowserAction:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum: [reload, wait, script, type, waitForSelector]
+          example: "reload"
+        value:
+          type: string
+          nullable: true
+          example: "5"
+        selector:
+          type: string
+          nullable: true
+          example: "input[name='username']"
+
+    SessionCreateRequest:
+      type: object
+      required:
+        - cmd
+      properties:
+        cmd:
+          type: string
+          enum: [sessions.create]
+        session:
+          type: string
+          description: Optional session ID, will be generated if not provided
+          example: "a1b2c3d4e5f6"
+        proxy:
+          type: string
+          description: Optional proxy configuration
+          example: "proxy://1.2.3.4:8080"
+
+    SessionCreateResponse:
+      type: object
+      properties:
+        session:
+          type: string
+          example: "a1b2c3d4e5f6"
+
+    SessionDestroyRequest:
+      type: object
+      required:
+        - cmd
+        - session
+      properties:
+        cmd:
+          type: string
+          enum: [sessions.destroy]
+        session:
+          type: string
+          example: "a1b2c3d4e5f6"
+
+    SessionDestroyResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "session deleted"
+
+    SessionListRequest:
+      type: object
+      required:
+        - cmd
+      properties:
+        cmd:
+          type: string
+          enum: [sessions.list]
+
+    SessionListResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            type: string
+          example: ["a1b2c3d4e5f6", "g7h8i9j0k1l2"]
+
+    RequestGetRequest:
+      type: object
+      required:
+        - cmd
+        - url
+      properties:
+        cmd:
+          type: string
+          enum: [request.get]
+        url:
+          type: string
+          example: "https://example.com"
+        session:
+          type: string
+          description: Optional session ID to use an existing browser session
+          example: "a1b2c3d4e5f6"
+        session_ttl_minutes:
+          type: integer
+          default: 5
+          example: 5
+        maxTimeout:
+          type: integer
+          default: 60
+          example: 60
+        cookies:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - value
+            properties:
+              name:
+                type: string
+                example: "sessionid"
+              value:
+                type: string
+                example: "abc123"
+          default: []
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrowserAction'
+          default: []
+        returnOnlyCookies:
+          type: string
+          enum: ["true", "false"]
+          default: "false"
+        proxy:
+          type: string
+          description: Optional proxy configuration
+          example: "proxy://1.2.3.4:8080"
+
+    RequestGetResponse:
+      type: object
+      properties:
+        solution:
+          type: object
+          properties:
+            url:
+              type: string
+              example: "https://example.com"
+            status:
+              type: integer
+              example: 200
+            headers:
+              type: object
+              additionalProperties:
+                type: string
+            response:
+              type: string
+              description: HTML content of the page
+            cookies:
+              type: array
+              items:
+                type: object
+            userAgent:
+              type: string
+              example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."
+            response_values:
+              type: array
+              items:
+                type: object
+        status:
+          type: string
+          example: "ok"
+        message:
+          type: string
+          example: ""
+        startTimestamp:
+          type: number
+          format: double
+          example: 1617567890.123
+        endTimestamp:
+          type: number
+          format: double
+          example: 1617567891.456
+        version:
+          type: string
+          example: "1.0.0"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid proxy format"
+
+    TaskResponse:
+      type: object
+      properties:
+        task_id:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        status:
+          type: string
+          enum: [queued, processing]
+          example: "queued"
+        message:
+          type: string
+          example: "Your request is being processed in the background"
+
+    TaskStatus:
+      type: object
+      properties:
+        task_id:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+          example: "completed"
+        result:
+          type: object
+          nullable: true
+          description: The result of the task (only present for completed tasks)
