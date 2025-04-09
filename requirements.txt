@@ -19,3 +19,5 @@ aiosqlite
 nest_asyncio
 nodriver
 aiohttp
+# pyautogui
+pyautogui>=0.9.53

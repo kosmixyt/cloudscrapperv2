@@ -49,6 +49,7 @@ async def process_flaresolver_request(task_id: str, data: Dict[str, Any], client
         task_results[task_id] = result
         task_status[task_id] = "completed"
     except Exception as e:
+        print(e)
         task_results[task_id] = {"error": str(e)}
         task_status[task_id] = "failed"
 
@@ -130,8 +131,6 @@ async def flaresolver(
         target=asyncio.run,
         args=(process_flaresolver_request(task_id, data, request.client.host, db),)
     ).start()
-    
-    
     return {
         "task_id": task_id,
         "status": "queued",
@@ -163,7 +162,7 @@ async def get_task_status(
             
             # Update status
             status = task_status[task_id]
-    
+    print(status)
     # Return result if task is completed/failed
     if status == "completed" or status == "failed":
         result = task_results.get(task_id, {"error": "Result not found"})
