@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.exceptions import HTTPException as StarletteHTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
@@ -145,6 +145,11 @@ try:
 except Exception as e:
     logger.error(f"Error mounting static files: {str(e)}")
 
+# on 404 error, serve index.html
+
+@app.exception_handler(404)
+async def not_found_handler(request, exc):
+    return RedirectResponse(url="/")
 # Mount static files directory for screenshots
 if os.path.exists("screenshot"):
     app.mount("/screenshots", StaticFiles(directory="screenshot"), name="screenshots")
