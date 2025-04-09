@@ -4,12 +4,17 @@ info:
   description: >
     An API for browser automation and web scraping with Cloudflare bypass capabilities.
     This service provides endpoints to manage browser sessions, users, and perform web requests.
+    
+    Note: All API endpoints are prefixed with `/api`. For example, to access the login endpoint,
+    use `/api/login` instead of `/login`.
   version: 1.0.0
   contact:
     name: API Support
 servers:
+  - url: http://localhost:8000/api
+    description: Development API server
   - url: http://localhost:8000
-    description: Development server
+    description: Development static files server
 tags:
   - name: Authentication
     description: User registration and authentication endpoints
@@ -23,7 +28,7 @@ tags:
     description: Access screenshots of web requests
 
 paths:
-  /users/:
+  /api/users/:
     post:
       tags:
         - Authentication
@@ -48,7 +53,7 @@ paths:
         '403':
           description: Registration is disabled
 
-  /login:
+  /api/login:
     post:
       tags:
         - Authentication
@@ -71,7 +76,7 @@ paths:
         '401':
           description: Incorrect email or password
 
-  /logout:
+  /api/logout:
     post:
       tags:
         - Authentication
@@ -90,7 +95,7 @@ paths:
                     type: string
                     example: "Successfully logged out"
 
-  /protected:
+  /api/protected:
     get:
       tags:
         - Authentication
@@ -109,7 +114,7 @@ paths:
         '401':
           description: Unauthorized
 
-  /v1:
+  /api/v1:
     post:
       tags:
         - Browser Sessions
@@ -145,7 +150,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /v1/tasks/{task_id}:
+  /api/v1/tasks/{task_id}:
     get:
       tags:
         - Browser Sessions
@@ -195,7 +200,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /allowed-hosts/:
+  /api/allowed-hosts/:
     post:
       tags:
         - Allowed Hosts
@@ -241,7 +246,7 @@ paths:
         '401':
           description: Unauthorized
 
-  /allowed-hosts/{origin_id}:
+  /api/allowed-hosts/{origin_id}:
     delete:
       tags:
         - Allowed Hosts
@@ -275,7 +280,7 @@ paths:
         '404':
           description: Allowed host not found
 
-  /requests/:
+  /api/requests/:
     get:
       tags:
         - Requests
@@ -296,7 +301,7 @@ paths:
         '401':
           description: Unauthorized
 
-  /screenshots/{request_id}:
+  /api/screenshots/{request_id}:
     get:
       tags:
         - Screenshots
@@ -327,7 +332,7 @@ paths:
         '404':
           description: Screenshot not found
 
-  /chrome-sessions/:
+  /api/chrome-sessions/:
     get:
       tags:
         - Browser Sessions

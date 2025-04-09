@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import timedelta
@@ -32,6 +35,11 @@ router = APIRouter()
 # Task storage for background tasks
 task_results = {}
 task_status = {}
+
+# Create static directory if it doesn't exist
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir)
 
 # Background task function
 async def process_flaresolver_request(task_id: str, data: Dict[str, Any], client_ip: str, db: AsyncSession):

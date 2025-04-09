@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:8000
 
 ### Create a new user
-POST {{baseUrl}}/users/
+POST {{baseUrl}}/api/users/
 Content-Type: application/json
 
 {
@@ -14,7 +14,7 @@ Content-Type: application/json
 ### Login
 # This request captures the access_token from the response
 # @name login
-POST {{baseUrl}}/login
+POST {{baseUrl}}/api/login
 Content-Type: application/json
 
 {
@@ -25,19 +25,19 @@ Content-Type: application/json
 ###
 
 ### Logout
-POST {{baseUrl}}/logout
+POST {{baseUrl}}/api/logout
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Access protected route
-GET {{baseUrl}}/protected
+GET {{baseUrl}}/api/protected
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Get all users (protected route)
-GET {{baseUrl}}/users/
+GET {{baseUrl}}/api/users/
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Create a new allowed host
-POST {{baseUrl}}/allowed-hosts/
+POST {{baseUrl}}/api/allowed-hosts/
 Content-Type: application/json
 Authorization: Bearer {{login.response.body.access_token}}
 
@@ -46,27 +46,27 @@ Authorization: Bearer {{login.response.body.access_token}}
 }
 
 ### Get all allowed hosts for current user
-GET {{baseUrl}}/allowed-hosts/
+GET {{baseUrl}}/api/allowed-hosts/
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Delete an allowed host (replace {id} with an actual ID)
-DELETE {{baseUrl}}/allowed-hosts/1
+DELETE {{baseUrl}}/api/allowed-hosts/1
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Get all user requests
-GET {{baseUrl}}/requests/
+GET {{baseUrl}}/api/requests/
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Get user requests with pagination and filtering
-GET {{baseUrl}}/requests/?page=1&limit=10&url=example.com
+GET {{baseUrl}}/api/requests/?page=1&limit=10&url=example.com
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Get all chrome sessions for current user
-GET {{baseUrl}}/chrome-sessions/
+GET {{baseUrl}}/api/chrome-sessions/
 Authorization: Bearer {{login.response.body.access_token}}
 
 ### Flaresolver API
-POST {{baseUrl}}/v1
+POST {{baseUrl}}/api/v1
 Content-Type: application/json
 
 {
@@ -75,7 +75,7 @@ Content-Type: application/json
 }
 
 ### Flaresolver API (Background processing)
-POST {{baseUrl}}/v1
+POST {{baseUrl}}/api/v1
 Content-Type: application/json
 
 {
@@ -85,14 +85,14 @@ Content-Type: application/json
 
 ### Check task status (replace with actual task_id from response)
 @taskId = e50aa28d-392a-4e07-9a01-078e9efaf597
-GET {{baseUrl}}/v1/tasks/{{taskId}}
+GET {{baseUrl}}/api/v1/tasks/{{taskId}}
 
 ### Check task status (without waiting)
-GET {{baseUrl}}/v1/tasks/{{taskId}}
+GET {{baseUrl}}/api/v1/tasks/{{taskId}}
 
 ### Check task status (with waiting - polls until complete or timeout)
-GET {{baseUrl}}/v1/tasks/{{taskId}}?wait=true&timeout=60
+GET {{baseUrl}}/api/v1/tasks/{{taskId}}?wait=true&timeout=60
 
 ### Get screenshot for a request (replace with actual request_id)
-GET {{baseUrl}}/screenshots/20
+GET {{baseUrl}}/api/screenshots/20
 Authorization: Bearer {{login.response.body.access_token}}
